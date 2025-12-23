@@ -38,10 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+     'rest_framework_simplejwt',
     'corsheaders',
     'accounts',#login,signup,profilesuser,vender,doctor
     'home',#contact,review
-    'delivery'#for delivery logn and signup all remaing delivery portal
+    'delivery',#for delivery logn and signup all remaing delivery portal
+    'venderdashboard'
 ]
 
 MIDDLEWARE = [
@@ -56,6 +58,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'quickmed_backend.urls'
+AUTH_USER_MODEL = "accounts.UserProfile"
 
 TEMPLATES = [
     {
@@ -81,7 +84,7 @@ WSGI_APPLICATION = 'quickmed_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'quickmed_db8',
+        'NAME': 'quickmed_db9',
         'USER': 'postgres',
         'PASSWORD': '2001',
         'HOST': 'localhost',
@@ -142,3 +145,21 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+from datetime import timedelta
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+}
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}

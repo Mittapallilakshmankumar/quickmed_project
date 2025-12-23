@@ -23,6 +23,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/", include("accounts.urls")),#signup,login,userprofile,venderprofiel,doctor profiel
     path("api/delivery/", include("delivery.urls")),
+    path("home/", include("home.urls")),
+    path("api/vendor/", include("venderdashboard.urls")),
+    
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

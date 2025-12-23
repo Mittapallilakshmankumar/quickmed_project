@@ -1,74 +1,71 @@
-from rest_framework.decorators import api_view
+
+
+
+
+
+
+
+from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from .models import UserProfile
-from .serializers import SignupSerializer,UserProfileSerializer
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.hashers import check_password
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
 
-#signup
+from .models import UserProfile
+from .serializers import SignupSerializer, UserProfileSerializer
 
+
+# ============================
+# SIGNUP
+# ============================
 @api_view(["POST"])
+@permission_classes([AllowAny]) 
 def signup(request):
     data = request.data
 
-    # Duplicate email check
     if UserProfile.objects.filter(email=data.get("email")).exists():
-        return Response(
-            {"message": "Email already registered"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"message": "Email already registered"}, status=400)
 
-    # Duplicate phone check
     if UserProfile.objects.filter(phone=data.get("phone")).exists():
-        return Response(
-            {"message": "Phone number already registered"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"message": "Phone already registered"}, status=400)
 
     serializer = SignupSerializer(data=data)
-
     if serializer.is_valid():
         serializer.save()
-        return Response(
-            {"message": "Signup successful"},
-            status=status.HTTP_201_CREATED
-        )
+        return Response({"message": "Signup successful"}, status=201)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-###login
+    return Response(serializer.errors, status=400)
 
 
-
+# ============================
+# LOGIN (JWT)
+# ============================
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def login(request):
     email = request.data.get("email")
     password = request.data.get("password")
     user_type = request.data.get("userType")
 
-    print("LOGIN INPUT 👉", email, password, user_type)
-
     try:
         user = UserProfile.objects.get(email=email)
     except UserProfile.DoesNotExist:
-        print("❌ EMAIL NOT FOUND")
         return Response({"error": "Invalid credentials"}, status=401)
 
-    print("DB VALUES 👉", user.email, user.password, user.user_type)
-
-    # ✅ FIXED PASSWORD CHECK
     if not check_password(password, user.password):
-        print("❌ PASSWORD MISMATCH")
         return Response({"error": "Invalid credentials"}, status=401)
 
     if user.user_type != user_type:
-        print("❌ ROLE MISMATCH")
         return Response({"error": "Invalid role"}, status=403)
 
-    print("✅ LOGIN SUCCESS")
+    refresh = RefreshToken.for_user(user)
 
     return Response({
-        "message": "Login successful",
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
         "user": {
             "id": user.id,
             "email": user.email,
@@ -78,59 +75,49 @@ def login(request):
     }, status=200)
 
 
-
-
-###userprfile user,vender,doctore
-
-
+# ============================
+# GET PROFILE (JWT REQUIRED)
+# ============================
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def get_user_profile(request):
-    email = request.query_params.get("email")
-
-    if not email:
-        return Response({"error": "Email required"}, status=400)
-
     try:
-        profile = UserProfile.objects.get(email=email)
-        serializer = UserProfileSerializer(profile)
-        return Response(serializer.data)
-
+        profile = UserProfile.objects.get(id=request.user.id)
     except UserProfile.DoesNotExist:
-        return Response({"error": "Profile not found"}, status=404)
+        return Response({"detail": "Profile not found"}, status=404)
+
+    serializer = UserProfileSerializer(profile, context={"request": request})
+    return Response(serializer.data, status=200)
 
 
 
 
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+# @parser_classes([MultiPartParser, FormParser])
+@parser_classes([JSONParser, MultiPartParser, FormParser])
 
-
-
-@api_view(["POST", "PATCH"])
 def update_user_profile(request):
-    email = request.data.get("email")
+    try:
+        profile = UserProfile.objects.get(id=request.user.id)
+    except UserProfile.DoesNotExist:
+        return Response({"detail": "Profile not found"}, status=404)
 
-    if not email:
-        return Response({"error": "Email required"}, status=400)
+    
+    serializer = UserProfileSerializer(
+        profile,
+        data=request.data,
+        partial=True
+    )
 
-    profile = UserProfile.objects.filter(email=email).first()
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=200)
 
-    # 🆕 CREATE PROFILE (POST)
-    if request.method == "POST" and profile is None:
-        serializer = UserProfileSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+    return Response(serializer.errors, status=400)
 
-    # ✏️ UPDATE PROFILE (PATCH)
-    if profile:
-        serializer = UserProfileSerializer(
-            profile,
-            data=request.data,
-            partial=True
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=200)
-        return Response(serializer.errors, status=400)
 
-    return Response({"error": "Profile not found"}, status=404)
+
+
+
+

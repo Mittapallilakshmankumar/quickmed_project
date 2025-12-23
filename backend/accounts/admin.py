@@ -1,11 +1,3 @@
-# from django.contrib import admin
-# from .models import UserProfile
-
-# admin.site.register(UserProfile)
-
-
-# accounts/admin.py
-
 from django.contrib import admin
 from .models import UserProfile
 
@@ -13,7 +5,6 @@ from .models import UserProfile
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
 
-    # 🔹 Columns shown in admin list view
     list_display = (
         "id",
         "full_name",
@@ -22,11 +13,11 @@ class UserProfileAdmin(admin.ModelAdmin):
         "user_type",
         "city",
         "state",
-        "is_verified",
+        "is_active",
+        "is_staff",
         "created_at",
     )
 
-    # 🔍 Search box
     search_fields = (
         "full_name",
         "email",
@@ -34,37 +25,28 @@ class UserProfileAdmin(admin.ModelAdmin):
         "pharmacy_name",
     )
 
-    # 🧭 Right-side filters
     list_filter = (
         "user_type",
-        "is_verified",
+        "is_active",
+        "is_staff",
         "state",
         "created_at",
     )
 
-    # ✏️ Editable fields directly in list
-    list_editable = (
-        "is_verified",
-    )
-
-    # 📄 Pagination
     list_per_page = 25
 
-    # 📌 Read-only fields
     readonly_fields = (
         "created_at",
         "updated_at",
         "last_login",
     )
 
-    # 🧩 Form layout grouping
     fieldsets = (
         ("Basic Information", {
             "fields": (
                 "full_name",
                 "email",
                 "phone",
-                "password",
                 "user_type",
             )
         }),
@@ -120,10 +102,10 @@ class UserProfileAdmin(admin.ModelAdmin):
             )
         }),
 
-        ("Verification & Meta", {
+        ("System Info", {
             "fields": (
-                "is_verified",
-                "verification_status",
+                "is_active",
+                "is_staff",
                 "last_login",
                 "created_at",
                 "updated_at",
