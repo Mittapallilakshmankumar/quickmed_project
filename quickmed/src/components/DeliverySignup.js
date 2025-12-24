@@ -2493,9 +2493,6 @@
 
 
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 
@@ -3372,6 +3369,7 @@ const formDataToSend = new FormData();
 formDataToSend.append("full_name", formData.fullName);
 formDataToSend.append("email", formData.email); 
 formDataToSend.append("phone", formData.phone);
+formDataToSend.append("password", formData.password);  // ✅ ADDED: Send password for UserProfile creation
 formDataToSend.append("aadhar_number", formData.aadharNumber);
 formDataToSend.append("pan_number", formData.panNumber);
 formDataToSend.append("vehicle_number", formData.vehicleNumber);
@@ -3398,7 +3396,15 @@ try {
   const data = await response.json();
 
   if (!response.ok) {
-    setToastMessage("Signup failed");
+    // Show backend error message if available
+    const msg =
+      data?.error ||
+      data?.detail ||
+      (typeof data === "object"
+        ? Object.values(data)[0]
+        : null) ||
+      "Signup failed";
+    setToastMessage(msg);
     setToastType("error");
     setShowToast(true);
     setIsLoading(false);

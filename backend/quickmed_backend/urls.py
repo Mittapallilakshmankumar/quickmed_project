@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/delivery/", include("delivery.urls")),
     path("home/", include("home.urls")),
     path("api/vendor/", include("venderdashboard.urls")),
+     path("api/doctor/", include("doctor.urls")),
     
 ]
 if settings.DEBUG:

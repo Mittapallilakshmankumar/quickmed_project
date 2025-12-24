@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'accounts',#login,signup,profilesuser,vender,doctor
     'home',#contact,review
     'delivery',#for delivery logn and signup all remaing delivery portal
-    'venderdashboard'
+    'venderdashboard',
+    'doctor'#for the doctor dashbard
 ]
 
 MIDDLEWARE = [
