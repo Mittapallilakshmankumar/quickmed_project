@@ -17,13 +17,15 @@ class DoctorMiniSerializer(serializers.ModelSerializer):
             "clinic_address",
         ]
 
-
 class TimeSlotSerializer(serializers.ModelSerializer):
+    doctor_details = DoctorMiniSerializer(source="doctor", read_only=True)
+
     class Meta:
         model = TimeSlot
         fields = [
             "id",
             "doctor",
+            "doctor_details",
             "date",
             "start_time",
             "end_time",
